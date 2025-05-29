@@ -1,5 +1,10 @@
+if (!window.Web3Modal) {
+    console.error("Web3Modal not loaded. Check CDN or network.");
+    document.getElementById("status").textContent = "Error: Web3Modal not loaded. Check network or try again.";
+}
+
 const walletProvider = new window.Web3Modal({
-    projectId: 'YOUR_WALLET_CONNECT_PROJECT_ID', // Replace with your WalletConnect project ID
+    projectId: '2ad60dd855dd330414d9ab7126319dca',
     walletConnectVersion: 2,
     themeMode: 'light',
     themeVariables: {
@@ -232,6 +237,11 @@ const iframeCode = `
 videoContainer.innerHTML = iframeCode;
 
 document.addEventListener('DOMContentLoaded', () => {
+    if (!window.Web3Modal) {
+        console.error("Web3Modal not loaded. Check CDN or network.");
+        document.getElementById("status").textContent = "Error: Web3Modal not loaded. Check network or try again.";
+        return;
+    }
     document.getElementById("connectEvmWallet").addEventListener("click", connectWallet);
     document.getElementById("payButton").addEventListener("click", payNow);
     document.getElementById("resetButton").addEventListener("click", resetApp);
