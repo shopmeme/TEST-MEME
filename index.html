@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meme-Coins Shop</title>
+    <script src="https://cdn.jsdelivr.net/npm/@web3modal/ethers5@4.2.4/dist/index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        .hidden { display: none; }
+        .coin-option { display: inline-block; margin: 10px; cursor: pointer; }
+        .coin-option img { width: 50px; height: 50px; }
+        .coin-option.selected { border: 2px solid blue; }
+        #video-container iframe { max-width: 100%; }
+    </style>
+</head>
+<body>
+    <div id="introSection">
+        <h1>Welcome to Meme-Coins Shop!</h1>
+        <p>Get ready to ride the meme-coin wave! Easily connect your wallet (Ethereum/BSC) and dive into a world of viral tokens. More blockchains and fresh coins are coming soon—join the party now! 🌙</p>
+    </div>
+
+    <div id="backers">
+        <h2>OUR BACKERS</h2>
+        <p>...</p>
+    </div>
+
+    <div id="walletButtons">
+        <button id="connectEvmWallet">Connect Wallet</button>
+    </div>
+
+    <div id="coinSelection" class="hidden">
+        <h2>Select a Meme Coin to Buy</h2>
+        <div id="coinOptions"></div>
+    </div>
+
+    <div id="paymentSection" class="hidden">
+        <h2>Buy <span id="selectedCoin"></span> with <span id="currency">USDT</span></h2>
+        <p>Enter amount (Min: $50, Max: $10,000):</p>
+        <input type="number" id="paymentAmount" min="50" max="10000">
+        <br><br>
+        <button id="addToWallet">Add to Wallet</button>
+        <button id="payButton">Pay Now</button>
+    </div>
+
+    <p id="status">Status: Click to connect your wallet</p>
+    <p id="paymentStatus"></p>
+    <button id="resetButton" class="hidden">Start Over</button>
+
+    <div id="videoSection">
+        <h2>How to Use Meme-Coins Shop</h2>
+        <p>Watch this quick video to learn how to connect your wallet and get started! 🎬</p>
+        <div id="video-container"></div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
