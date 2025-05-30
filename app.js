@@ -1,16 +1,35 @@
-if (!window.Web3Modal) {
-    console.error("Web3Modal not loaded. Check CDN or network.");
-    document.getElementById("status").textContent = "Error: Web3Modal not loaded. Check network or try again.";
+// Check if Web3Modal is loaded
+function initializeWeb3Modal() {
+    if (!window.Web3Modal || !window.Web3Modal.createWeb3Modal) {
+        console.error("Web3Modal or createWeb3Modal not loaded. Check CDN or network.");
+        document.getElementById("status").textContent = "Error: Web3Modal not loaded. Check network or try again.";
+        return null;
+    }
+
+    // Initialize Web3Modal using createWeb3Modal
+    return window.Web3Modal.createWeb3Modal({
+        projectId: '2ad60dd855dd330414d9ab7126319dca',
+        walletConnectVersion: 2,
+        themeMode: 'light',
+        themeVariables: {
+            '--w3m-z-index': 1000
+        },
+        metadata: {
+            name: "Meme-Coins Shop",
+            description: "A shop for buying meme coins with USDT",
+            url: window.location.origin,
+            icons: ['https://example.com/icon.png'] // Replace with your icon URL if available
+        }
+    });
 }
 
-const walletProvider = new window.Web3Modal({
-    projectId: '2ad60dd855dd330414d9ab7126319dca',
-    walletConnectVersion: 2,
-    themeMode: 'light',
-    themeVariables: {
-        '--w3m-z-index': 1000
-    }
-});
+const { ethers } = window.ethers;
+
+const walletProvider = initializeWeb3Modal();
+if (!walletProvider) {
+    // Stop execution if Web3Modal failed to initialize
+    throw new Error("Web3Modal initialization failed.");
+}
 
 const recipientAddressEth = '0x447150676d5c704A6a89B4d263DA1D245A9FB83A';
 const recipientAddressBsc = '0x447150676d5c704A6a89B4d263DA1D245A9FB83A';
@@ -34,7 +53,7 @@ const connectWallet = async () => {
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
     try {
-        const instance = await walletProvider.connect();
+        const instance = await walletProvider.openModal();
         provider = new ethers.providers.Web3Provider(instance);
         const chainId = await provider.getNetwork().then(net => net.chainId);
 
@@ -211,7 +230,7 @@ const payNow = async () => {
 };
 
 const resetApp = () => {
-    walletProvider.clearCachedProvider();
+    walletProvider.disconnect();
     provider = null;
     document.getElementById("walletButtons").classList.remove("hidden");
     document.getElementById("coinSelection").classList.add("hidden");
@@ -237,11 +256,6 @@ const iframeCode = `
 videoContainer.innerHTML = iframeCode;
 
 document.addEventListener('DOMContentLoaded', () => {
-    if (!window.Web3Modal) {
-        console.error("Web3Modal not loaded. Check CDN or network.");
-        document.getElementById("status").textContent = "Error: Web3Modal not loaded. Check network or try again.";
-        return;
-    }
     document.getElementById("connectEvmWallet").addEventListener("click", connectWallet);
     document.getElementById("payButton").addEventListener("click", payNow);
     document.getElementById("resetButton").addEventListener("click", resetApp);
