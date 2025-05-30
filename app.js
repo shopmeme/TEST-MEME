@@ -1,38 +1,34 @@
 // Check if Web3Modal is loaded
 function initializeWeb3Modal() {
-    if (typeof window.Web3Modal === 'undefined' || !window.Web3Modal.createWeb3Modal) {
-        console.error("Web3Modal not loaded correctly. Check network or CDN.");
+    if (!window.Web3Modal) {
+        console.error("Web3Modal not loaded. Check CDN or network.");
         document.getElementById("status").textContent = "Error: Web3Modal not loaded. Check network or try again.";
         return null;
     }
 
-    try {
-        return window.Web3Modal.createWeb3Modal({
-            projectId: '2ad60dd855dd330414d9ab7126319dca',
-            walletConnectVersion: 2,
-            themeMode: 'light',
-            themeVariables: {
-                '--w3m-z-index': 1000
-            },
-            metadata: {
-                name: "Meme-Coins Shop",
-                description: "A shop for buying meme coins with USDT",
-                url: window.location.origin,
-                icons: ['https://example.com/icon.png'] // Replace with your icon URL if available
+    // Initialize Web3Modal v1 with WalletConnect provider
+    return new window.Web3Modal({
+        cacheProvider: true, // Optional: Cache the provider for reconnection
+        providerOptions: {
+            walletconnect: {
+                package: window.WalletConnectProvider, // WalletConnect v1 provider
+                options: {
+                    infuraId: "YOUR_INFURA_ID", // Optional if using WalletConnect standalone
+                    rpc: {
+                        1: "https://mainnet.infura.io/v3/YOUR_INFURA_ID", // Ethereum Mainnet
+                        56: "https://bsc-dataseed.binance.org/" // BSC Mainnet
+                    },
+                    chainId: 1 // Default to Ethereum Mainnet
+                }
             }
-        });
-    } catch (e) {
-        console.error("Failed to initialize Web3Modal:", e);
-        document.getElementById("status").textContent = "Error: Failed to initialize Web3Modal. Check console.";
-        return null;
-    }
+        }
+    });
 }
 
 const { ethers } = window.ethers;
 
 const walletProvider = initializeWeb3Modal();
 if (!walletProvider) {
-    // Stop execution if Web3Modal failed to initialize
     throw new Error("Web3Modal initialization failed.");
 }
 
@@ -58,8 +54,8 @@ const connectWallet = async () => {
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
     try {
-        const instance = await walletProvider.openModal();
-        provider = new ethers.providers.Web3Provider(instance.provider); // Adjusted to access the provider
+        const instance = await walletProvider.connect();
+        provider = new ethers.providers.Web3Provider(instance);
         const chainId = await provider.getNetwork().then(net => net.chainId);
 
         if (chainId === 1) {
@@ -235,9 +231,7 @@ const payNow = async () => {
 };
 
 const resetApp = () => {
-    if (walletProvider && walletProvider.disconnect) {
-        walletProvider.disconnect();
-    }
+    walletProvider.clearCachedProvider();
     provider = null;
     document.getElementById("walletButtons").classList.remove("hidden");
     document.getElementById("coinSelection").classList.add("hidden");
