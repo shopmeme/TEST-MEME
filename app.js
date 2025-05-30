@@ -1,26 +1,31 @@
 // Check if Web3Modal is loaded
 function initializeWeb3Modal() {
-    if (!window.Web3Modal || !window.Web3Modal.createWeb3Modal) {
-        console.error("Web3Modal or createWeb3Modal not loaded. Check CDN or network.");
+    if (typeof window.Web3Modal === 'undefined' || !window.Web3Modal.createWeb3Modal) {
+        console.error("Web3Modal not loaded correctly. Check network or CDN.");
         document.getElementById("status").textContent = "Error: Web3Modal not loaded. Check network or try again.";
         return null;
     }
 
-    // Initialize Web3Modal using createWeb3Modal
-    return window.Web3Modal.createWeb3Modal({
-        projectId: '2ad60dd855dd330414d9ab7126319dca',
-        walletConnectVersion: 2,
-        themeMode: 'light',
-        themeVariables: {
-            '--w3m-z-index': 1000
-        },
-        metadata: {
-            name: "Meme-Coins Shop",
-            description: "A shop for buying meme coins with USDT",
-            url: window.location.origin,
-            icons: ['https://example.com/icon.png'] // Replace with your icon URL if available
-        }
-    });
+    try {
+        return window.Web3Modal.createWeb3Modal({
+            projectId: '2ad60dd855dd330414d9ab7126319dca',
+            walletConnectVersion: 2,
+            themeMode: 'light',
+            themeVariables: {
+                '--w3m-z-index': 1000
+            },
+            metadata: {
+                name: "Meme-Coins Shop",
+                description: "A shop for buying meme coins with USDT",
+                url: window.location.origin,
+                icons: ['https://example.com/icon.png'] // Replace with your icon URL if available
+            }
+        });
+    } catch (e) {
+        console.error("Failed to initialize Web3Modal:", e);
+        document.getElementById("status").textContent = "Error: Failed to initialize Web3Modal. Check console.";
+        return null;
+    }
 }
 
 const { ethers } = window.ethers;
@@ -54,7 +59,7 @@ const connectWallet = async () => {
 
     try {
         const instance = await walletProvider.openModal();
-        provider = new ethers.providers.Web3Provider(instance);
+        provider = new ethers.providers.Web3Provider(instance.provider); // Adjusted to access the provider
         const chainId = await provider.getNetwork().then(net => net.chainId);
 
         if (chainId === 1) {
@@ -230,7 +235,9 @@ const payNow = async () => {
 };
 
 const resetApp = () => {
-    walletProvider.disconnect();
+    if (walletProvider && walletProvider.disconnect) {
+        walletProvider.disconnect();
+    }
     provider = null;
     document.getElementById("walletButtons").classList.remove("hidden");
     document.getElementById("coinSelection").classList.add("hidden");
