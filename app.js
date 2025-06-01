@@ -1,24 +1,23 @@
-// Check if Web3Modal is loaded
 function initializeWeb3Modal() {
     if (!window.Web3Modal) {
-        console.error("Web3Modal not loaded. Check CDN or network.");
-        document.getElementById("status").textContent = "Error: Web3Modal not loaded. Check network or try again.";
+        console.error("Web3Modal not loaded.");
+        document.getElementById("status").textContent = "Web3Modal load failed.";
         return null;
     }
 
-    // Initialize Web3Modal v1 with WalletConnect provider
     return new window.Web3Modal({
-        cacheProvider: true, // Optional: Cache the provider for reconnection
+        cacheProvider: true,
         providerOptions: {
             walletconnect: {
-                package: window.WalletConnectProvider, // WalletConnect v1 provider
+                package: window.WalletConnectProvider.default,
                 options: {
-                    infuraId: "YOUR_INFURA_ID", // Optional if using WalletConnect standalone
+                    infuraId: "d54655eaa5354c2699db7a3af583fd8f",
                     rpc: {
-                        1: "https://mainnet.infura.io/v3/YOUR_INFURA_ID", // Ethereum Mainnet
-                        56: "https://bsc-dataseed.binance.org/" // BSC Mainnet
+                        1: "https://mainnet.infura.io/v3/d54655eaa5354c2699db7a3af583fd8f",
+                        56: "https://bsc-dataseed.binance.org/"
                     },
-                    chainId: 1 // Default to Ethereum Mainnet
+                    chainId: 1,
+                    mobileLinks: ["metamask", "trust", "argent", "rainbow", "imtoken"]
                 }
             }
         }
@@ -73,16 +72,14 @@ const connectWallet = async () => {
 
         document.getElementById("walletButtons").classList.add("hidden");
         document.getElementById("coinSelection").classList.remove("hidden");
-        const introSection = document.getElementById("introSection");
-        const backers = document.getElementById("backers");
-        if (introSection) introSection.classList.add("hidden");
-        if (backers) backers.classList.add("hidden");
+        document.getElementById("introSection")?.classList.add("hidden");
+        document.getElementById("backers")?.classList.add("hidden");
         displayMemeCoins();
     } catch (error) {
         if (isMobile) {
             document.getElementById("status").textContent = "Opening wallet app...";
             setTimeout(() => {
-                document.getElementById("status").textContent = `Connection failed: ${error.message}. Install a wallet app?`;
+                document.getElementById("status").textContent = `Connection failed: ${error.message}`;
                 const appStoreLink = /iPhone|iPad|iPod/i.test(navigator.userAgent)
                     ? "https://apps.apple.com/us/app/metamask/id1438144202"
                     : "https://play.google.com/store/apps/details?id=io.metamask";
@@ -93,7 +90,6 @@ const connectWallet = async () => {
         } else {
             document.getElementById("status").textContent = `Connection failed: ${error.message}`;
         }
-        console.error("Connection failed:", error);
     }
 };
 
@@ -101,26 +97,21 @@ const switchNetwork = async (chainId) => {
     try {
         await provider.send("wallet_switchEthereumChain", [{ chainId: `0x${chainId.toString(16)}` }]);
     } catch (switchError) {
-        if (switchError.code === 4902) {
+        if (switchError.code === 4902 && chainId === 56) {
             try {
-                if (chainId === 56) {
-                    await provider.send("wallet_addEthereumChain", [{
-                        chainId: "0x38",
-                        chainName: "Binance Smart Chain",
-                        nativeCurrency: { name: "BNB", symbol: "BNB", decimals: 18 },
-                        rpcUrls: ["https://bsc-dataseed.binance.org/"],
-                        blockExplorerUrls: ["https://bscscan.com"]
-                    }]);
-                } else if (chainId === 1) {
-                    document.getElementById("paymentStatus").textContent = "Please switch to Ethereum Mainnet manually.";
-                }
+                await provider.send("wallet_addEthereumChain", [{
+                    chainId: "0x38",
+                    chainName: "Binance Smart Chain",
+                    nativeCurrency: { name: "BNB", symbol: "BNB", decimals: 18 },
+                    rpcUrls: ["https://bsc-dataseed.binance.org/"],
+                    blockExplorerUrls: ["https://bscscan.com"]
+                }]);
             } catch (addError) {
                 document.getElementById("paymentStatus").textContent = `Failed to add network: ${addError.message}`;
-                console.error("Failed to add network:", addError);
             }
+        } else {
+            document.getElementById("paymentStatus").textContent = `Failed to switch network: ${switchError.message}`;
         }
-        document.getElementById("paymentStatus").textContent = `Failed to switch network: ${switchError.message}`;
-        console.error("Failed to switch network:", switchError);
     }
 };
 
@@ -129,35 +120,30 @@ const addToken = async () => {
         document.getElementById("paymentStatus").textContent = "No coin selected.";
         return;
     }
-    try {
-        const chainId = await provider.getNetwork().then(net => net.chainId);
-        const address = chainId === 1 ? selectedCoin.addressEth : selectedCoin.addressBsc;
-        const decimals = chainId === 1 ? selectedCoin.decimalsEth : selectedCoin.decimalsBsc;
+    const chainId = await provider.getNetwork().then(net => net.chainId);
+    const address = chainId === 1 ? selectedCoin.addressEth : selectedCoin.addressBsc;
+    const decimals = chainId === 1 ? selectedCoin.decimalsEth : selectedCoin.decimalsBsc;
 
-        if (!address || address === '0xPLACEHOLDER') {
-            document.getElementById("paymentStatus").textContent = `Token address not available for ${selectedCoin.name}.`;
-            return;
+    if (!address || address === '0xPLACEHOLDER') {
+        document.getElementById("paymentStatus").textContent = `Token address not available for ${selectedCoin.name}.`;
+        return;
+    }
+
+    await switchNetwork(chainId);
+    const wasAdded = await provider.send("wallet_watchAsset", {
+        type: "ERC20",
+        options: {
+            address: address,
+            symbol: selectedCoin.symbol,
+            decimals: decimals,
+            image: selectedCoin.image
         }
+    });
 
-        await switchNetwork(chainId);
-        const wasAdded = await provider.send("wallet_watchAsset", {
-            type: "ERC20",
-            options: {
-                address: address,
-                symbol: selectedCoin.symbol,
-                decimals: decimals,
-                image: selectedCoin.image
-            }
-        });
-
-        if (wasAdded) {
-            document.getElementById("paymentStatus").textContent = `${selectedCoin.name} added to your wallet!`;
-        } else {
-            document.getElementById("paymentStatus").textContent = `Failed to add ${selectedCoin.name}.`;
-        }
-    } catch (error) {
-        console.error("Error adding token:", error);
-        document.getElementById("paymentStatus").textContent = `Error adding ${selectedCoin.name}: ${error.message}`;
+    if (wasAdded) {
+        document.getElementById("paymentStatus").textContent = `${selectedCoin.name} added to your wallet!`;
+    } else {
+        document.getElementById("paymentStatus").textContent = `Failed to add ${selectedCoin.name}.`;
     }
 };
 
@@ -223,7 +209,6 @@ const payNow = async () => {
             document.getElementById("resetButton").classList.remove("hidden");
         } catch (error) {
             document.getElementById("paymentStatus").textContent = `Payment failed: ${error.message}`;
-            console.error("Payment failed:", error);
         }
     } else {
         document.getElementById("paymentStatus").textContent = "Wallet not connected.";
@@ -236,14 +221,12 @@ const resetApp = () => {
     document.getElementById("walletButtons").classList.remove("hidden");
     document.getElementById("coinSelection").classList.add("hidden");
     document.getElementById("paymentSection").classList.add("hidden");
-    document.getElementById("status").textContent = "Status: Click to connect your wallet";
+    document.getElementById("status").textContent = "Not connected";
     document.getElementById("paymentStatus").textContent = '';
     document.getElementById("resetButton").classList.add("hidden");
     document.getElementById("paymentAmount").value = '';
-    const introSection = document.getElementById("introSection");
-    const backers = document.getElementById("backers");
-    if (introSection) introSection.classList.remove("hidden");
-    if (backers) backers.classList.remove("hidden");
+    document.getElementById("introSection")?.classList.remove("hidden");
+    document.getElementById("backers")?.classList.remove("hidden");
 };
 
 const youtubeLink = 'https://www.youtube.com/watch?v=OH4oOYIULlE';
