@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Meme-coins Shop</title>
+  <title>Meme-Coins Shop</title>
 
   <!-- WalletConnect v1 + Web3Modal + Ethers -->
   <script src="https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
@@ -66,7 +66,7 @@
   <!-- Intro -->
   <h2>Welcome to Meme-Coins Shop!</h2>
   <p>
-    Connect your wallet (MetaMask, Trust, etc.) on Ethereum or BSC to buy meme coins instantly! 🌐💰
+    Connect your wallet (MetaMask, Trust Wallet, etc.) on Ethereum or BSC to buy meme coins! 🌐💰
   </p>
 
   <!-- WalletConnect + Web3Modal Logic -->
@@ -108,7 +108,7 @@
 
           document.getElementById('status').innerText = `Connected: ${address}`;
         } catch (err) {
-          console.error("Connection failed", err);
+          console.error("Connection failed:", err);
           document.getElementById('status').innerText = "Connection failed or cancelled.";
         }
       });
