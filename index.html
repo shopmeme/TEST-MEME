@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Meme-coins Shop - WalletConnect v2</title>
+  <title>Meme-coins Shop</title>
 
-  <!-- WalletConnect v2 + Ethers -->
-  <script src="https://cdn.jsdelivr.net/npm/@walletconnect/web3-provider@2.0.0-beta.79/dist/umd/index.min.js"></script>
+  <!-- WalletConnect v1 + Web3Modal + Ethers -->
+  <script src="https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
+  <script src="https://unpkg.com/web3modal@1.9.8/dist/index.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 
-  <!-- Styles -->
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -32,7 +32,7 @@
     button {
       padding: 10px 20px;
       margin: 5px;
-      background: #00aaff;
+      background: #4CAF50;
       color: white;
       border: none;
       border-radius: 5px;
@@ -51,7 +51,6 @@
     }
   </style>
 </head>
-
 <body>
   <!-- Banner -->
   <img src="images/banner.png" alt="Meme-Coins Shop Banner" class="banner" />
@@ -64,39 +63,58 @@
   <!-- Wallet Status -->
   <p id="status">Not connected</p>
 
-  <!-- Welcome Section -->
+  <!-- Intro -->
   <h2>Welcome to Meme-Coins Shop!</h2>
   <p>
-    Connect your mobile wallet and start buying viral tokens instantly on Ethereum or BSC. 🌐📱
+    Connect your wallet (MetaMask, Trust, etc.) on Ethereum or BSC to buy meme coins instantly! 🌐💰
   </p>
 
-  <!-- WalletConnect Logic -->
+  <!-- WalletConnect + Web3Modal Logic -->
   <script>
-    const projectId = "2ad60dd855dd330414d9ab7126319dca"; // Your WalletConnect Cloud Project ID
+    let web3Modal;
+    let provider;
 
-    const provider = new window.WalletConnectProvider.default({
-      projectId: projectId,
-      chains: [1, 56], // Ethereum Mainnet & Binance Smart Chain
-      showQrModal: true,
-      rpcMap: {
-        1: "https://rpc.ankr.com/eth",
-        56: "https://bsc-dataseed.binance.org/"
-      }
-    });
+    async function initWalletConnect() {
+      const providerOptions = {
+        walletconnect: {
+          package: window.WalletConnectProvider.default,
+          options: {
+            rpc: {
+              1: "https://mainnet.infura.io/v3/d54655eaa5354c2699db7a3af583fd8f",
+              56: "https://bsc-dataseed.binance.org/"
+            },
+            mobileLinks: ["metamask", "trust", "argent", "rainbow", "imtoken"]
+          }
+        }
+      };
 
-    document.getElementById("connectWallet").addEventListener("click", async () => {
-      try {
-        await provider.enable();
-        const ethersProvider = new ethers.providers.Web3Provider(provider);
-        const signer = ethersProvider.getSigner();
-        const address = await signer.getAddress();
+      web3Modal = new window.Web3Modal.default({
+        cacheProvider: false,
+        providerOptions,
+        theme: "dark"
+      });
 
-        document.getElementById("status").innerText = `Connected: ${address}`;
-      } catch (err) {
-        console.error("Connection error:", err);
-        document.getElementById("status").innerText = "Connection failed.";
-      }
-    });
+      document.getElementById('connectWallet').addEventListener('click', async () => {
+        try {
+          provider = await web3Modal.connect();
+
+          provider.on("accountsChanged", (accounts) => {
+            document.getElementById('status').innerText = `Connected: ${accounts[0]}`;
+          });
+
+          const ethersProvider = new ethers.providers.Web3Provider(provider);
+          const signer = ethersProvider.getSigner();
+          const address = await signer.getAddress();
+
+          document.getElementById('status').innerText = `Connected: ${address}`;
+        } catch (err) {
+          console.error("Connection failed", err);
+          document.getElementById('status').innerText = "Connection failed or cancelled.";
+        }
+      });
+    }
+
+    window.addEventListener('load', initWalletConnect);
   </script>
 </body>
 </html>
