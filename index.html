@@ -1,60 +1,122 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meme-Coins Shop</title>
-    <script src="https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js" defer></script>
-    <script src="https://unpkg.com/web3modal@1.13.0/dist/index.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js" defer></script>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; }
-        .hidden { display: none; }
-        .coin-option { display: inline-block; margin: 10px; cursor: pointer; }
-        .coin-option img { width: 50px; height: 50px; }
-        .coin-option.selected { border: 2px solid blue; }
-        #video-container iframe { max-width: 100%; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Meme-coins Shop</title>
+
+  <!-- Styles -->
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+      margin: 0;
+      background: url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80') no-repeat center center fixed;
+      background-size: cover;
+      color: white;
+      text-shadow: 1px 1px 3px black;
+    }
+
+    .banner {
+      width: 100%;
+      max-width: 1300px;
+      display: block;
+      margin: 0 auto;
+    }
+
+    button {
+      padding: 10px 20px;
+      margin: 5px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #walletButtons {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+    }
+
+    #status {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+  </style>
+
+  <!-- Include WalletConnect & Web3Modal -->
+  <script src="https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
+  <script src="https://unpkg.com/web3modal@1.9.8/dist/index.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
 </head>
+
 <body>
-    <div id="introSection">
-        <h1>Welcome to Meme-Coins Shop!</h1>
-        <p>Get ready to ride the meme-coin wave! Easily connect your wallet (Ethereum/BSC) and dive into a world of viral tokens. More blockchains and fresh coins are coming soon—join the party now! 🌙</p>
-    </div>
+  <!-- Banner -->
+  <img src="images/banner.png" alt="Meme-Coins Shop Banner" class="banner" />
 
-    <div id="backers">
-        <h2>OUR BACKERS</h2>
-        <p>...</p>
-    </div>
+  <!-- Wallet Connect Button -->
+  <div id="walletButtons">
+    <button id="connectEvmWallet">Connect Wallet</button>
+  </div>
 
-    <div id="walletButtons">
-        <button id="connectEvmWallet">Connect Wallet</button>
-    </div>
+  <!-- Wallet Status -->
+  <p id="status">Not connected</p>
 
-    <div id="coinSelection" class="hidden">
-        <h2>Select a Meme Coin to Buy</h2>
-        <div id="coinOptions"></div>
-    </div>
+  <!-- Welcome Section -->
+  <h2>Welcome to Meme-Coins Shop!</h2>
+  <p>
+    Get ready to ride the meme-coin wave! Easily connect your wallet (Ethereum/BSC)
+    and dive into a world of viral tokens. More blockchains coming soon!
+  </p>
 
-    <div id="paymentSection" class="hidden">
-        <h2>Buy <span id="selectedCoin"></span> with <span id="currency">USDT</span></h2>
-        <p>Enter amount (Min: $50, Max: $10,000):</p>
-        <input type="number" id="paymentAmount" min="50" max="10000">
-        <br><br>
-        <button id="addToWallet">Add to Wallet</button>
-        <button id="payButton">Pay Now</button>
-    </div>
+  <!-- Script -->
+  <script>
+    let web3Modal;
+    let provider;
 
-    <p id="status">Status: Click to connect your wallet</p>
-    <p id="paymentStatus"></p>
-    <button id="resetButton" class="hidden">Start Over</button>
+    async function initWalletConnect() {
+      const providerOptions = {
+        walletconnect: {
+          package: window.WalletConnectProvider.default,
+          options: {
+            rpc: {
+              1: "https://mainnet.infura.io/v3/YOUR_INFURA_PROJECT_ID",
+              56: "https://bsc-dataseed.binance.org/",
+            },
+            mobileLinks: ["metamask", "trust", "rainbow", "argent", "imtoken"]
+          }
+        }
+      };
 
-    <div id="videoSection">
-        <h2>How to Use Meme-Coins Shop</h2>
-        <p>Watch this quick video to learn how to connect your wallet and get started! 🎬</p>
-        <div id="video-container"></div>
-    </div>
+      web3Modal = new window.Web3Modal.default({
+        cacheProvider: false,
+        providerOptions,
+        theme: "dark"
+      });
 
-    <script src="app.js" defer></script>
+      document.getElementById('connectEvmWallet').addEventListener('click', async () => {
+        try {
+          provider = await web3Modal.connect();
+
+          provider.on("accountsChanged", (accounts) => {
+            document.getElementById('status').innerText = `Connected: ${accounts[0]}`;
+          });
+
+          const ethersProvider = new ethers.providers.Web3Provider(provider);
+          const signer = ethersProvider.getSigner();
+          const address = await signer.getAddress();
+          document.getElementById('status').innerText = `Connected: ${address}`;
+        } catch (err) {
+          console.error("Connection failed", err);
+          document.getElementById('status').innerText = "Connection cancelled or failed.";
+        }
+      });
+    }
+
+    window.addEventListener('load', initWalletConnect);
+  </script>
 </body>
 </html>
