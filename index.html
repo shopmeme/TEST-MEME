@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Meme-Coins Shop</title>
 
-  <!-- WalletConnect v1 + Web3Modal + Ethers -->
+  <!-- Web3Modal + WalletConnect v1 + Ethers -->
   <script src="https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
   <script src="https://unpkg.com/web3modal@1.9.8/dist/index.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
@@ -57,64 +57,47 @@
 
   <!-- Wallet Connect Button -->
   <div id="walletButtons">
-    <button id="connectWallet">Connect Wallet</button>
+    <button id="connectEvmWallet">Connect Wallet</button>
   </div>
 
   <!-- Wallet Status -->
   <p id="status">Not connected</p>
 
   <!-- Intro -->
-  <h2>Welcome to Meme-Coins Shop!</h2>
-  <p>
-    Connect your wallet (MetaMask, Trust Wallet, etc.) on Ethereum or BSC to buy meme coins! 🌐💰
-  </p>
+  <div id="introSection">
+    <h2>Welcome to Meme-Coins Shop!</h2>
+    <p>
+      Connect your wallet on Ethereum or BSC to buy meme coins with USDT. 🚀
+    </p>
+  </div>
 
-  <!-- WalletConnect + Web3Modal Logic -->
-  <script>
-    let web3Modal;
-    let provider;
+  <!-- Coin Selection Section -->
+  <div id="coinSelection" class="hidden">
+    <h2>Select a Meme Coin</h2>
+    <div id="coinOptions"></div>
+  </div>
 
-    async function initWalletConnect() {
-      const providerOptions = {
-        walletconnect: {
-          package: window.WalletConnectProvider.default,
-          options: {
-            rpc: {
-              1: "https://mainnet.infura.io/v3/d54655eaa5354c2699db7a3af583fd8f",
-              56: "https://bsc-dataseed.binance.org/"
-            },
-            mobileLinks: ["metamask", "trust", "argent", "rainbow", "imtoken"]
-          }
-        }
-      };
+  <!-- Payment Section -->
+  <div id="paymentSection" class="hidden">
+    <h2>Buy <span id="selectedCoin"></span> with <span id="currency">USDT</span></h2>
+    <p id="amountLimits">Enter amount (Min: $50, Max: $100,000):</p>
+    <input type="number" id="paymentAmount" placeholder="Amount" step="0.01" min="50" max="100000">
+    <p>
+      <button id="addToWallet">Add to Wallet</button>
+      <button id="payButton">Pay Now</button>
+    </p>
+    <p id="paymentStatus"></p>
+    <p><button id="resetButton" class="hidden">Start Over</button></p>
+  </div>
 
-      web3Modal = new window.Web3Modal.default({
-        cacheProvider: false,
-        providerOptions,
-        theme: "dark"
-      });
+  <!-- Video Section -->
+  <div id="videoSection">
+    <h2>How to Use Meme-Coins Shop</h2>
+    <p>Watch this quick video to learn how to connect and pay!</p>
+    <div id="video-container"></div>
+  </div>
 
-      document.getElementById('connectWallet').addEventListener('click', async () => {
-        try {
-          provider = await web3Modal.connect();
-
-          provider.on("accountsChanged", (accounts) => {
-            document.getElementById('status').innerText = `Connected: ${accounts[0]}`;
-          });
-
-          const ethersProvider = new ethers.providers.Web3Provider(provider);
-          const signer = ethersProvider.getSigner();
-          const address = await signer.getAddress();
-
-          document.getElementById('status').innerText = `Connected: ${address}`;
-        } catch (err) {
-          console.error("Connection failed:", err);
-          document.getElementById('status').innerText = "Connection failed or cancelled.";
-        }
-      });
-    }
-
-    window.addEventListener('load', initWalletConnect);
-  </script>
+  <!-- App JS -->
+  <script src="app.js"></script>
 </body>
 </html>
