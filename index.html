@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meme-coins Shop</title>
     <style>
-.banner {
-        width: 100%;
-        max-width: 1300px;
-        height: auto;
-        display: block;
-        margin: 0 auto;
-    }
+        .banner {
+            width: 100%;
+            max-width: 1300px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
         body {
             font-family: Arial, sans-serif;
             text-align: center;
@@ -77,33 +77,33 @@
         .backers {
             position: relative;
             margin: 2px 0;
-            height: 120px; /* Accommodate static-backers and logos */
-            overflow: hidden; /* Prevent logos from overflowing outside the container */
+            height: 120px;
+            overflow: hidden;
         }
         .static-backers {
-            position: absolute; /* Scrolls with the page */
-            top: 10px; /* Position adjusted previously */
-            left: 0px; /* Position at the left wall */
+            position: absolute;
+            top: 10px;
+            left: 0px;
             display: flex;
-            flex-direction: column; /* Stack text above image */
+            flex-direction: column;
             align-items: flex-start;
-            gap: 15px; /* Existing spacing between text and image */
+            gap: 15px;
             font-size: 1.5em;
             z-index: 2;
         }
         .backer-logo {
             position: absolute;
-            left: 80px; /* Start 80px from the left wall */
-            top: 35px; /* Moved up by 10px (from 60px) */
-            animation: slideAcross 10s linear infinite; /* 1s duration per logo, infinite loop */
-            animation-delay: var(--delay); /* Staggered delays for distributed flow */
+            left: 80px;
+            top: 35px;
+            animation: slideAcross 10s linear infinite;
+            animation-delay: var(--delay);
             z-index: 1;
         }
         .backer-logo img {
-            width: 140px; /* Increased from 120px to 140px to make logos a little bigger */
+            width: 140px;
             height: auto;
             transition: transform 0.3s ease;
-            background: none; /* Ensure no background on the image element */
+            background: none;
         }
         .backer-logo:hover img,
         .backer-logo:hover {
@@ -111,110 +111,99 @@
         }
         @keyframes slideAcross {
             0% {
-                transform: translateX(0px); /* Start at the 80px left position */
+                transform: translateX(0px);
                 opacity: 1;
             }
             90% {
-                transform: translateX(calc(100vw - 140px)); /* Adjusted for new 140px width */
+                transform: translateX(calc(100vw - 140px));
                 opacity: 1;
             }
             100% {
-                transform: translateX(calc(100vw - 140px)); /* Hold position briefly */
-                opacity: 0; /* Hide at the end */
-            }
-            100.01% {
-                transform: translateX(0px); /* Immediately reappear at the 80px left position */
-                opacity: 1; /* Reappear fully visible */
+                transform: translateX(calc(100vw - 140px));
+                opacity: 0;
             }
         }
+        /* WalletConnect Styles */
+        #walletStatus {
+            margin-top: 10px;
+            font-size: 1.1em;
+            color: #fff;
+            text-shadow: 1px 1px 3px #222;
+        }
     </style>
-    <!-- Load ethers.js via Cloudflare CDN -->
-    <!-- WalletConnect Web3 Provider -->
-<script src="https://unpkg.com/@walletconnect/web3-provider/dist/umd/index.min.js"></script>
-<!-- Web3.js (used by WalletConnect provider) -->
-<script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js" type="text/javascript"></script>
 </head>
 <body>
-    <img src="images/banner.png" alt="Meme-Coins Shop Banner" class="banner">
     <div id="walletButtons">
-        <button id="connectEvmWallet">Connect Wallet</button>
+        <button id="connectWallet">Connect Wallet</button>
+        <span id="walletStatus"></span>
     </div>
-    <p id="status"></p>
-    <div class="backers">
-        <div class="static-backers">
-            <span>OUR BACKERS</span>
-            <img src="handshake.png" alt="Handshake" style="width: 70px; height: auto;">
-        </div>
-        <!-- Ensure these logo images (galxe.png, binance-labs.png, uniswap.png, pancakeswap.png) have transparent backgrounds -->
-        <div class="backer-logo" style="--delay: 0s;"><img src="galxe.png" alt="galxe"></div>
-        <div class="backer-logo" style="--delay: 2.5s;"><img src="binance-labs.png" alt="binance-Labs"></div>
-        <div class="backer-logo" style="--delay: 5s;"><img src="uniswap.png" alt="uniswap"></div>
-        <div class="backer-logo" style="--delay: 7.5s;"><img src="pancakeswap.png" alt="pancakeswap"></div>
-    </div>
+    <img class="banner" src="https://your-banner-image-url.png" alt="Meme Shop Banner">
     <div id="introSection">
-        <h2>Welcome to Meme-Coins Shop!</h2>
-        <p>Get ready to ride the meme-coin wave! Easily connect your MetaMask wallet (Ethereum/BSC) and dive into a world of viral tokens. More blockchains and fresh coins are coming soon—join the party now! 🌙</p>
+        <h1>Welcome to Meme-coins Shop!</h1>
+        <p>Buy your favorite meme coins using your crypto wallet!</p>
     </div>
-    <div id="coinSelection" class="hidden">
-        <h2>Select a Meme Coin to Buy</h2>
-        <div id="coinOptions"></div>
-    </div>
-    <div id="paymentSection" class="hidden">
-        <h2>Buy <span id="selectedCoin"></span> with <span id="currency"></span></h2>
-        <p id="amountLimits">Enter amount (Min: $50, Max: $10,000):</p>
-        <input type="number" id="paymentAmount" placeholder="Amount" step="0.01" min="50" max="10000">
-        <p>
-            <button id="addToWallet" class="add-to-wallet">Add to Wallet</button>
-            <button id="payButton">Pay Now</button>
-        </p>
-        <p id="paymentStatus"></p>
-        <p><button id="resetButton" class="hidden">Start Over</button></p>
-    </div>
-    <div id="videoSection">
-        <h2>How to Use Meme-Coins Shop</h2>
-        <p>Watch this quick video to learn how to connect your MetaMask wallet and get started! 🎬</p>
-        <div id="video-container"></div>
-    </div>
-    <script src="app.js"></script>
-    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93ca0e77780853af',t:'MTc0NjcxODgzNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
-    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93d0fb005d4e8bbb',t:'MTc0Njc9MTQzOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
-    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93d242965e06bf84',t:'MTc0NjgwNDg1Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
-    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93e066965a7a1d72',t:'MTc0Njk5NTMzMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
-    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93e9dd30ba1153b2',t:'MTc0NzA1MjM2Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93ea60b4ba1e4d3e',t:'MTc0NzA1Nzc0OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93eac1f96ddbafef',t:'MTc0NzA2MTczMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
-<script>
-  async function connectWalletWithWalletConnect() {
-    const provider = new WalletConnectProvider.default({
-      rpc: {
-        1: "https://mainnet.infura.io/v3/d54655eaa5354c2699db7a3af583fd8f",// Replace with actual Infura ID
-        56: "https://bsc-dataseed.binance.org/",           // BSC example
-      },
-    });
+    <!-- Add your other content/sections here -->
 
-    await provider.enable(); // Opens WalletConnect modal
+    <!-- WalletConnect and ethers.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <script>
+        const connectBtn = document.getElementById('connectWallet');
+        const walletStatus = document.getElementById('walletStatus');
+        let providerInstance = null;
 
-    const web3 = new Web3(provider);
-    const accounts = await web3.eth.getAccounts();
-    document.getElementById('status').textContent = 'Connected: ' + accounts[0];
+        connectBtn.onclick = async function() {
+            // Disable button while connecting
+            connectBtn.disabled = true;
+            connectBtn.innerText = "Connecting...";
+            walletStatus.textContent = "";
+            try {
+                // 1. Create WalletConnect Provider
+                const provider = new WalletConnectProvider.default({
+                    rpc: {
+                        1: "https://mainnet.infura.io/v3/YOUR_PROJECT_ID", // <-- REPLACE with your Project ID
+                        // Add more chains if needed
+                    }
+                });
 
-    // Optional: Handle account changes
-    provider.on("accountsChanged", (accounts) => {
-      document.getElementById('status').textContent = 'Account changed: ' + accounts[0];
-    });
+                // 2. Enable session (triggers QR Code modal)
+                await provider.enable();
 
-    provider.on("disconnect", () => {
-      document.getElementById('status').textContent = 'Disconnected';
-    });
-  }
+                // 3. Use ethers.js to get wallet address
+                const ethersProvider = new ethers.providers.Web3Provider(provider);
+                const signer = ethersProvider.getSigner();
+                const address = await signer.getAddress();
 
-  // Add WalletConnect button dynamically (optional)
-  const btn = document.createElement('button');
-  btn.textContent = 'WalletConnect';
-  btn.style.marginLeft = '10px';
-  btn.onclick = connectWalletWithWalletConnect;
-  document.getElementById('walletButtons').appendChild(btn);
-</script>
+                providerInstance = provider;
+
+                walletStatus.textContent = `Connected: ${address.slice(0,6)}...${address.slice(-4)}`;
+                connectBtn.innerText = "Disconnect Wallet";
+                connectBtn.disabled = false;
+
+                // Handle disconnect
+                connectBtn.onclick = async function() {
+                    if (providerInstance) {
+                        await providerInstance.disconnect();
+                        walletStatus.textContent = "";
+                        connectBtn.innerText = "Connect Wallet";
+                        providerInstance = null;
+                        connectBtn.onclick = connectBtn.onclick = async function() { /* repeat connect logic */ location.reload(); };
+                    }
+                };
+
+                provider.on("disconnect", (code, reason) => {
+                    walletStatus.textContent = "";
+                    connectBtn.innerText = "Connect Wallet";
+                    providerInstance = null;
+                    connectBtn.onclick = async function() { /* repeat connect logic */ location.reload(); };
+                });
+
+            } catch (error) {
+                walletStatus.textContent = "Connection cancelled or failed.";
+                connectBtn.disabled = false;
+                connectBtn.innerText = "Connect Wallet";
+            }
+        };
+    </script>
 </body>
 </html>
