@@ -2,66 +2,175 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Meme-Coins Shop (Solana)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meme-coins Shop (Solana Only)</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f0f0f0; }
+        .banner {
+            width: 100%;
+            max-width: 1300px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+            background: url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            text-shadow: 1px 1px 3px black;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
         .hidden { display: none; }
-        h1 { text-align: center; color: #333; }
-        button { padding: 15px 30px; font-size: 18px; background-color: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer; width: 80%; max-width: 300px; margin: 10px auto; display: block; }
-        button:hover { background-color: #0056b3; }
-        #status, #paymentStatus { margin-top: 20px; color: #28a745; font-size: 16px; text-align: center; }
-        #coinOptions { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-top: 20px; }
-        .coin-option { cursor: pointer; text-align: center; }
-        .coin-option img { width: 100px; height: 100px; object-fit: contain; }
-        .coin-option p { margin: 5px 0; }
-        .coin-option.selected { border: 2px solid #007bff; border-radius: 8px; }
-        #paymentSection, #coinSelection { margin-top: 20px; }
-        #paymentAmount { padding: 10px; width: 80%; max-width: 300px; margin: 10px auto; display: block; }
-        #video-container { text-align: center; margin-top: 20px; }
-        #backers { text-align: center; margin: 20px 0; }
-        #backers img { width: 50px; height: 50px; margin: 0 10px; }
+        .coin-option {
+            display: inline-block;
+            margin: 10px;
+            text-align: center;
+            cursor: pointer;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 10px;
+            border-radius: 10px;
+        }
+        .coin-option img {
+            width: 50px;
+            height: 50px;
+        }
+        .coin-option.selected {
+            border: 2px solid #4CAF50;
+            padding: 9px;
+        }
+        #paymentSection input {
+            padding: 5px;
+            margin: 10px;
+            width: 200px;
+            background: rgba(255, 255, 255, 0.8);
+            border: none;
+            border-radius: 5px;
+        }
+        #walletButtons {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        .add-to-wallet {
+            background: #2196F3;
+        }
+        #introSection, #videoSection {
+            margin-top: 20px;
+            padding: 10px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        #video-container {
+            text-align: center;
+        }
+        .backers {
+            position: relative;
+            margin: 2px 0;
+            height: 120px;
+            overflow: hidden;
+        }
+        .static-backers {
+            position: absolute;
+            top: 10px;
+            left: 0px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 15px;
+            font-size: 1.5em;
+            z-index: 2;
+        }
+        .backer-logo {
+            position: absolute;
+            left: 80px;
+            top: 35px;
+            animation: slideAcross 10s linear infinite;
+            animation-delay: var(--delay);
+            z-index: 1;
+        }
+        .backer-logo img {
+            width: 140px;
+            height: auto;
+            transition: transform 0.3s ease;
+            background: none;
+        }
+        .backer-logo:hover img,
+        .backer-logo:hover {
+            transform: scale(1.1);
+        }
+        @keyframes slideAcross {
+            0% {
+                transform: translateX(0px);
+                opacity: 1;
+            }
+            90% {
+                transform: translateX(calc(100vw - 140px));
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(calc(100vw - 140px));
+                opacity: 0;
+            }
+            100.01% {
+                transform: translateX(0px);
+                opacity: 1;
+            }
+        }
     </style>
-    <script src="https://unpkg.com/@solana/web3.js@1.91.8/lib/index.iife.min.js"></script> <!-- Solana Web3.js -->
-    <script src="https://unpkg.com/@solana/wallet-adapter-base@0.9.23/umd/index.min.js"></script>
-    <script src="https://unpkg.com/@solana/wallet-adapter-wallets@0.19.16/umd/index.min.js"></script>
-    <script src="https://unpkg.com/@solana/wallet-adapter-react@0.15.35/umd/index.min.js"></script>
-    <script src="https://unpkg.com/@solana/wallet-adapter-phantom@0.9.23/umd/index.min.js"></script>
+    <!-- Solana web3 and Phantom wallet support -->
+    <script src="https://unpkg.com/@solana/web3.js@1.91.8/lib/index.iife.min.js"></script>
 </head>
 <body>
-    <h1>Welcome to Meme-Coins Shop (Solana)!</h1>
-    <div id="introSection">
-        <p>Get ready to ride the meme-coin wave on Solana! Connect your Solana wallet (e.g., Phantom) and dive into a world of viral tokens. More coins are coming soon—join the party now! 🌙</p>
-    </div>
-    <div id="backers">
-        <h2>OUR BACKERS</h2>
-        <img src="https://via.placeholder.com/50" alt="Backer 1">
-        <img src="https://via.placeholder.com/50" alt="Backer 2">
-        <img src="https://via.placeholder.com/50" alt="Backer 3">
-    </div>
+    <img src="images/banner.png" alt="Meme-Coins Shop Banner" class="banner">
     <div id="walletButtons">
         <button id="connectSolanaWallet">Connect Solana Wallet</button>
     </div>
-    <div id="status"></div>
+    <p id="status"></p>
+    <div class="backers">
+        <div class="static-backers">
+            <span>OUR BACKERS</span>
+            <img src="handshake.png" alt="Handshake" style="width: 70px; height: auto;">
+        </div>
+        <div class="backer-logo" style="--delay: 0s;"><img src="galxe.png" alt="galxe"></div>
+        <div class="backer-logo" style="--delay: 2.5s;"><img src="binance-labs.png" alt="binance-Labs"></div>
+        <div class="backer-logo" style="--delay: 5s;"><img src="uniswap.png" alt="uniswap"></div>
+        <div class="backer-logo" style="--delay: 7.5s;"><img src="pancakeswap.png" alt="pancakeswap"></div>
+    </div>
+    <div id="introSection">
+        <h2>Welcome to Meme-Coins Shop!</h2>
+        <p>Get ready to ride the meme-coin wave! Easily connect your Phantom wallet (Solana) and dive into a world of viral tokens. More Solana coins are coming soon—join the party now! 🌙</p>
+    </div>
     <div id="coinSelection" class="hidden">
         <h2>Select a Meme Coin to Buy</h2>
         <div id="coinOptions"></div>
     </div>
     <div id="paymentSection" class="hidden">
         <h2>Buy <span id="selectedCoin"></span> with SOL</h2>
-        <p>Enter amount (Min: 0.1 SOL, Max: 100 SOL):</p>
-        <input type="number" id="paymentAmount" placeholder="Amount in SOL" step="0.01">
-        <button id="addToWallet">Add to Wallet</button>
-        <button id="payButton">Pay Now</button>
-        <div id="paymentStatus"></div>
-        <button id="resetButton" class="hidden">Start Over</button>
+        <p id="amountLimits">Enter amount (Min: 0.1, Max: 100 SOL):</p>
+        <input type="number" id="paymentAmount" placeholder="Amount (SOL)" step="0.01" min="0.1" max="100">
+        <p>
+            <button id="addToWallet" class="add-to-wallet">Add to Wallet</button>
+            <button id="payButton">Pay Now</button>
+        </p>
+        <p id="paymentStatus"></p>
+        <p><button id="resetButton" class="hidden">Start Over</button></p>
     </div>
-    <div id="howToUse">
+    <div id="videoSection">
         <h2>How to Use Meme-Coins Shop</h2>
-        <p>Watch this quick video to learn how to connect your Solana wallet and get started! 🎬</p>
+        <p>Watch this quick video to learn how to connect your Phantom wallet and get started! 🎬</p>
         <div id="video-container"></div>
     </div>
-
     <script src="app.js"></script>
 </body>
 </html>
