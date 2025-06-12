@@ -1,43 +1,41 @@
-// Solana Web3.js and Wallet Adapter
+// Solana web3.js is loaded globally via CDN
 const { Connection, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } = window.solanaWeb3;
-const { WalletAdapterNetwork } = window.solanaWalletAdapterBase;
-const { getPhantomWallet } = window.solanaWalletAdapterWallets;
-const { useWallet } = window.solanaWalletAdapterReact;
 
-// Define Solana-specific meme coins with names, images, and contract addresses
-const allMemeCoins = [
+// Meme coins available on Solana
+const memeCoins = [
     { 
         name: 'Bonk', 
         image: 'bonk.png', 
-        address: new PublicKey('DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263'), // Solana Bonk token address
-        decimals: 5, 
-        symbol: 'BONK' 
+        address: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263',
+        decimals: 5,
+        symbol: 'BONK'
     },
     { 
         name: 'Samoyedcoin', 
         image: 'samoyedcoin.png', 
-        address: new PublicKey('7xKXtg2CWsqd9QoHMpBu9x5RPiXvVKP7UX8dX8BhU3io'), // Solana Samoyedcoin token address
-        decimals: 6, 
-        symbol: 'SAMO' 
+        address: '7xKXtg2CWsqd9QoHMpBu9x5RPiXvVKP7UX8dX8BhU3io',
+        decimals: 9,
+        symbol: 'SAMO'
     },
     { 
         name: 'Dogwifhat', 
         image: 'dogwifhat.png', 
-        address: new PublicKey('EKpQGSJ8v6oF9fsYYDbW5e1v4Lp6RBuqN2zUoC7SVpL2'), // Solana Dogwifhat token address
-        decimals: 6, 
-        symbol: 'WIF' 
+        address: 'EKpQGSJ8v6oF9fsYYDbW5e1v4Lp6RBuqN2zUoC7SVpL2',
+        decimals: 8,
+        symbol: 'WIF'
     }
 ];
 
-// Filtered meme coins for Solana
-let memeCoins = [];
-let selectedCoin = null; // Store selected coin for addToken
-let wallet = null;
+// Change this to your receiving Solana wallet address:
+const recipientAddress = 'YOUR_SOL_RECEIVER_ADDRESS';
 
-// Initialize Solana connection
+// Solana connection (mainnet)
 const connection = new Connection('https://api.mainnet-beta.solana.com', 'confirmed');
 
-// Connect to Solana wallet (Phantom)
+let selectedCoin = null;
+let wallet = null;
+
+// Connect Phantom wallet
 const connectSolanaWallet = async () => {
     if (!window.solana || !window.solana.isPhantom) {
         document.getElementById("status").textContent = "Phantom wallet not detected. Please install Phantom.";
@@ -49,18 +47,16 @@ const connectSolanaWallet = async () => {
         await wallet.connect();
         const publicKey = wallet.publicKey.toString();
         document.getElementById('status').textContent = `Connected to Solana: ${publicKey.slice(0, 6)}...${publicKey.slice(-4)}`;
-
         document.getElementById("walletButtons").classList.add("hidden");
         document.getElementById("coinSelection").classList.remove("hidden");
         const introSection = document.getElementById("introSection");
         const backers = document.getElementById("backers");
         if (introSection) introSection.classList.add("hidden");
         if (backers) backers.classList.add("hidden");
-        memeCoins = allMemeCoins; // Use all Solana meme coins
         displayMemeCoins();
     } catch (error) {
-        console.error('Solana connection failed:', error.message);
         document.getElementById('status').textContent = 'Solana connection failed. Check console.';
+        console.error('Solana connection failed:', error);
     }
 
     wallet.on('disconnect', () => {
@@ -69,7 +65,7 @@ const connectSolanaWallet = async () => {
     });
 };
 
-// Add token to wallet (Solana-specific)
+// Add token to Phantom wallet (if supported)
 const addToken = async () => {
     if (!selectedCoin) {
         document.getElementById("paymentStatus").textContent = "No coin selected.";
@@ -82,22 +78,24 @@ const addToken = async () => {
 
     try {
         await wallet.request({
-            method: 'solana_addToken',
+            method: 'wallet_watchAsset',
             params: {
-                mint: selectedCoin.address.toString(),
-                decimals: selectedCoin.decimals,
-                symbol: selectedCoin.symbol,
-                name: selectedCoin.name,
-            },
+                type: 'spl-token',
+                options: {
+                    address: selectedCoin.address,
+                    symbol: selectedCoin.symbol,
+                    decimals: selectedCoin.decimals,
+                    image: window.location.origin + '/' + selectedCoin.image
+                }
+            }
         });
         document.getElementById("paymentStatus").textContent = `${selectedCoin.name} added to your wallet!`;
     } catch (error) {
-        console.error("Error adding token:", error);
-        document.getElementById("paymentStatus").textContent = `Error adding ${selectedCoin.name}: ${error.message}`;
+        document.getElementById("paymentStatus").textContent = `Could not add ${selectedCoin.name}. Try manually in Phantom.`;
     }
 };
 
-// Display meme coins in the UI
+// Display meme coins for selection
 const displayMemeCoins = () => {
     const coinOptionsDiv = document.getElementById("coinOptions");
     if (!coinOptionsDiv) return;
@@ -109,64 +107,66 @@ const displayMemeCoins = () => {
             <img src="${coin.image}" alt="${coin.name}">
             <p>${coin.name}</p>
         `;
-        coinDiv.addEventListener("click", () => selectCoin(coin));
+        coinDiv.addEventListener("click", function() { selectCoin(coin, coinDiv); });
         coinOptionsDiv.appendChild(coinDiv);
     });
 };
 
 // Handle coin selection
-const selectCoin = (coin) => {
+const selectCoin = (coin, element) => {
     document.querySelectorAll(".coin-option").forEach(option => option.classList.remove("selected"));
-    event.currentTarget.classList.add("selected");
+    element.classList.add("selected");
     document.getElementById("coinSelection").classList.add("hidden");
     document.getElementById("paymentSection").classList.remove("hidden");
     document.getElementById("selectedCoin").textContent = coin.name;
     selectedCoin = coin;
 };
 
-// Payment logic for Solana (SOL transfer)
+// Pay with SOL
 const payNow = async () => {
     const amount = parseFloat(document.getElementById("paymentAmount").value);
     if (!amount || amount < 0.1 || amount > 100) {
         document.getElementById("paymentStatus").textContent = "Invalid amount. Must be between 0.1 and 100 SOL.";
         return;
     }
-
     if (!wallet || !wallet.publicKey) {
         document.getElementById("paymentStatus").textContent = "Solana wallet not connected.";
+        return;
+    }
+    if (!recipientAddress || recipientAddress === 'YOUR_SOL_RECEIVER_ADDRESS') {
+        document.getElementById("paymentStatus").textContent = "Missing recipient address. Please set your Solana address in the code.";
         return;
     }
 
     try {
         const fromPublicKey = wallet.publicKey;
-        const recipientAddress = new PublicKey('YourSolanaRecipientAddressHere'); // Replace with your Solana wallet address
+        const toPublicKey = new PublicKey(recipientAddress);
         const lamports = amount * LAMPORTS_PER_SOL;
 
         const { blockhash } = await connection.getLatestBlockhash();
         const transaction = new Transaction({
             recentBlockhash: blockhash,
-            feePayer: fromPublicKey,
+            feePayer: fromPublicKey
         }).add(
             SystemProgram.transfer({
                 fromPubkey: fromPublicKey,
-                toPubkey: recipientAddress,
-                lamports: lamports,
+                toPubkey: toPublicKey,
+                lamports: lamports
             })
         );
 
-        const signedTransaction = await wallet.signTransaction(transaction);
-        const signature = await connection.sendRawTransaction(signedTransaction.serialize());
+        const signed = await wallet.signTransaction(transaction);
+        const signature = await connection.sendRawTransaction(signed.serialize());
         await connection.confirmTransaction(signature);
 
         document.getElementById("paymentStatus").textContent = `Success: Transferred ${amount} SOL! (Tx: ${signature})`;
         document.getElementById("resetButton").classList.remove("hidden");
     } catch (error) {
         document.getElementById("paymentStatus").textContent = `Payment failed: ${error.message}`;
-        console.error("Payment failed:", error);
     }
 };
 
-// Reset the app
+// Reset app to initial state
 const resetApp = () => {
     document.getElementById("walletButtons").classList.remove("hidden");
     document.getElementById("coinSelection").classList.add("hidden");
@@ -181,16 +181,17 @@ const resetApp = () => {
     if (backers) backers.classList.remove("hidden");
 };
 
-// Embed YouTube video using the link
+// Embed YouTube video
 const youtubeLink = 'https://www.youtube.com/watch?v=OH4oOYIULlE';
-const videoId = youtubeLink.split('v=')[1]?.split('&')[0]; // Extracts video ID
+const videoId = youtubeLink.split('v=')[1]?.split('&')[0];
 const videoContainer = document.getElementById("video-container");
-const iframeCode = `
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/${videoId}" 
-  frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-  allowfullscreen></iframe>
-`;
-if (videoContainer) videoContainer.innerHTML = iframeCode;
+if (videoContainer) {
+    videoContainer.innerHTML = `
+      <iframe width="560" height="315" src="https://www.youtube.com/embed/${videoId}" 
+      frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+      allowfullscreen></iframe>
+    `;
+}
 
 // Ensure DOM is loaded before adding event listeners
 document.addEventListener('DOMContentLoaded', () => {
@@ -199,27 +200,3 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById("resetButton").addEventListener("click", resetApp);
     document.getElementById("addToWallet").addEventListener("click", addToken);
 });
-</DOCUMENT>
-
----
-
-### Changes Made:
-1. **Button Visibility**:
-   - Removed the `.hidden` class from the `#walletButtons` div in `index.html` to ensure the "Connect Solana Wallet" button is visible by default.
-   - The button is now present on page load and functional.
-
-2. **No Auto-Connect**:
-   - Reverted to a manual connection approach with the button, as auto-connect was causing issues with visibility. The button triggers the `connectSolanaWallet` function when clicked.
-
-3. **Solana Focus**:
-   - Kept the setup exclusive to Solana using the Phantom SDK.
-
-**Next Steps**:
-- Save these files as `index.html` and `app.js` in your `meme-coin-shop` folder.
-- Ensure you have the Phantom wallet installed (as a browser extension or mobile app).
-- Run with Live Server (right-click `index.html` in VS Code and select “Open with Live Server” at `http://127.0.0.1:5500`).
-- Check if the "Connect Solana Wallet" button appears and test the connection.
-
-**Confirm**:
-- Can you see the "Connect Solana Wallet" button now, and does it work when clicked (showing a connected address)?
-- If you still can’t see it or get errors, let me know the exact issue or error message.
