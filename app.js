@@ -38,9 +38,8 @@ let wallet = null;
 // Connect Phantom wallet
 const connectSolanaWallet = async () => {
     if (!window.solana || !window.solana.isPhantom) {
-        if (/Mobi|Android/i.test(navigator.userAgent)) {
-            document.getElementById("status").textContent = "Please open this site in the Phantom app or browser to connect.";
-            window.location.href = "https://phantom.app/ul/v1/connect?url=" + encodeURIComponent(window.location.href);
+        if (/Mobi|Android/i.test(navigator.userAgent) && /Chrome/.test(navigator.userAgent)) {
+            document.getElementById("status").textContent = "Please open this site in the Phantom app browser to connect.";
             return;
         }
         document.getElementById("status").textContent = "Phantom wallet not detected. Please install Phantom or use the Phantom browser.";
@@ -48,9 +47,13 @@ const connectSolanaWallet = async () => {
     }
 
     try {
+        if (wallet && wallet.isConnected) {
+            await wallet.disconnect();
+        }
+
         wallet = window.solana;
-        await wallet.connect();
-        const publicKey = wallet.publicKey.toString();
+        const response = await wallet.connect({ onlyIfTrusted: false });
+        const publicKey = response.publicKey.toString();
         document.getElementById('status').textContent = `Connected to Solana: ${publicKey.slice(0, 6)}...${publicKey.slice(-4)}`;
         document.getElementById("walletButtons").classList.add("hidden");
         document.getElementById("coinSelection").classList.remove("hidden");
@@ -60,7 +63,7 @@ const connectSolanaWallet = async () => {
         if (backers) backers.classList.add("hidden");
         displayMemeCoins();
     } catch (error) {
-        document.getElementById('status').textContent = 'Solana connection failed. Check console.';
+        document.getElementById('status').textContent = `Connection failed: ${error.message}. Please approve in Phantom.`;
         console.error('Solana connection failed:', error);
     }
 
