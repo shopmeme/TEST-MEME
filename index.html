@@ -173,11 +173,5 @@
     </div>
         <div id="video-container"></div>
     <script src="app.js"></script>
-     <script>
-        if (/Mobi|Android/i.test(navigator.userAgent)) {
-            document.getElementById("status").textContent = "Opening in Phantom app...";
-            window.location.href = "https://phantom.app/ul/v1/connect?url=" + encodeURIComponent(window.location.href);
-        }
-    </script>
 </body>
 </html>
