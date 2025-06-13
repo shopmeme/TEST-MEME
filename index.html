@@ -171,18 +171,7 @@
         <p>Watch this quick video to learn how to connect your Phantom wallet and get started! 🎬</p>
         <div id="video-container"></div>
     </div>
-       <div id="video-container"></div>
+      <div id="video-container"></div>
 <script src="app.js"></script>
-<script>
-    // Check if in Chrome and redirect to Phantom app
-    if (/Mobi|Android/i.test(navigator.userAgent) && /Chrome/.test(navigator.userAgent)) {
-        document.getElementById("status").textContent = "Redirecting to Phantom app...";
-        window.location.href = "https://phantom.app/ul/v1/connect?url=" + encodeURIComponent(window.location.href);
-    }
-    // Auto-connect when loaded in Phantom app
-    if (window.solana && window.solana.isPhantom) {
-        document.getElementById("connectSolanaWallet").click(); // Simulate button click
-    }
-</script>
 </body>
 </html>
