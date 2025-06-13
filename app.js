@@ -38,9 +38,9 @@ let wallet = null;
 // Connect Phantom wallet
 const connectSolanaWallet = async () => {
     if (!window.solana || !window.solana.isPhantom) {
-        // Check if on mobile and suggest opening in Phantom app
         if (/Mobi|Android/i.test(navigator.userAgent)) {
-            document.getElementById("status").textContent = "Please open this site in the Phantom app or browser.";
+            document.getElementById("status").textContent = "Please open this site in the Phantom app or browser to connect.";
+            window.location.href = "https://phantom.app/ul/v1/connect?url=" + encodeURIComponent(window.location.href);
             return;
         }
         document.getElementById("status").textContent = "Phantom wallet not detected. Please install Phantom or use the Phantom browser.";
