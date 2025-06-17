@@ -2,7 +2,7 @@
 const { ethers } = typeof window !== 'undefined' && window.ethers ? window.ethers : null;
 
 // Use the correct SolanaWeb3 reference for CDN/IIFE usage
-const SolanaWeb3 = window.solanaWeb3;
+const SolanaWeb3 = window.solanaWeb3 || window.solanaWeb3 || window["@solana/web3.js"]; // fallback for future-proof
 const solanaProvider = window.solana || null;
 
 const solanaRecipientAddress = '2dwB5Gm8cdeLGjC9gagdbU14wntHww5gx6bPzUScyYFq';
@@ -58,6 +58,7 @@ const connectSolanaWallet = async () => {
       updateAmountLimits();
     } catch (err) {
       console.error("Solana connection error:", err);
+      document.getElementById("status").textContent = `Solana connection error: ${err.message || err}`;
     }
   } else {
     alert("Phantom Wallet not found.");
@@ -188,13 +189,18 @@ const payNow = async () => {
       );
 
       transaction.feePayer = from;
-      transaction.recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
+      transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
 
+      // Phantom expects the transaction to be serialized to Buffer
       const signed = await solanaProvider.signTransaction(transaction);
-      const sig = await connection.sendRawTransaction(signed.serialize());
-      await connection.confirmTransaction(sig);
+      const rawTx = signed.serialize();
+      // Fix: ensure rawTx is a Uint8Array (Buffer.from is polyfilled)
+      const signature = await connection.sendRawTransaction(
+        (rawTx instanceof Uint8Array) ? rawTx : Uint8Array.from(rawTx)
+      );
+      await connection.confirmTransaction(signature);
 
-      document.getElementById("paymentStatus").textContent = `Success! Tx: ${sig}`;
+      document.getElementById("paymentStatus").textContent = `Success! Tx: ${signature}`;
       document.getElementById("resetButton").classList.remove("hidden");
     } catch (err) {
       document.getElementById("paymentStatus").textContent = `Solana error: ${err.message}`;
