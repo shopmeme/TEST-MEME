@@ -1,8 +1,8 @@
 // Load ethers from global if available
-const { ethers } = typeof window !== 'undefined' && window.ethers ? window.ethers : null;
+const { ethers } = typeof window !== 'undefined' && window.ethers ? window.ethers : {};
 
-// Use the correct SolanaWeb3 reference for CDN/IIFE usage
-const SolanaWeb3 = window.solanaWeb3 || window.solanaWeb3 || window["@solana/web3.js"]; // fallback for future-proof
+// SolanaWeb3 global from CDN IIFE
+const SolanaWeb3 = window.solanaWeb3;
 const solanaProvider = window.solana || null;
 
 const solanaRecipientAddress = '2dwB5Gm8cdeLGjC9gagdbU14wntHww5gx6bPzUScyYFq';
