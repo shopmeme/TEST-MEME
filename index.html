@@ -128,13 +128,16 @@
       }
     }
   </style>
-  <!-- LIBRARIES: ethers, buffer, assign Buffer, solanaWeb3, then your app -->
+  <!-- 1. ethers (optional, if you use it) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+  <!-- 2. Buffer polyfill -->
   <script src="https://cdn.jsdelivr.net/npm/buffer@6.0.3/index.min.js"></script>
+  <!-- 3. Assign Buffer global (must come after the above line) -->
   <script>
-    // This line is *critical* and must come right after the polyfill
+    // This assignment must come IMMEDIATELY after buffer is loaded!
     window.Buffer = buffer.Buffer;
   </script>
+  <!-- 4. Solana web3.js (must come after Buffer is set) -->
   <script src="https://unpkg.com/@solana/web3.js@1.95.2/lib/index.iife.min.js"></script>
 </head>
 <body>
