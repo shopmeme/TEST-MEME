@@ -1,210 +1,200 @@
-// Solana web3.js is loaded globally via CDN
-const { Connection, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } = window.solanaWeb3;
+// Load ethers from global if available
+const { ethers } = typeof window !== 'undefined' && window.ethers ? window.ethers : null;
 
-// Meme coins available on Solana
-const memeCoins = [
-    { 
-        name: 'Bonk', 
-        image: 'bonk.png', 
-        address: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263',
-        decimals: 5,
-        symbol: 'BONK'
-    },
-    { 
-        name: 'Samoyedcoin', 
-        image: 'samoyedcoin.png', 
-        address: '7xKXtg2CWsqd9QoHMpBu9x5RPiXvVKP7UX8dX8BhU3io',
-        decimals: 9,
-        symbol: 'SAMO'
-    },
-    { 
-        name: 'Dogwifhat', 
-        image: 'dogwifhat.png', 
-        address: 'EKpQGSJ8v6oF9fsYYDbW5e1v4Lp6RBuqN2zUoC7SVpL2',
-        decimals: 8,
-        symbol: 'WIF'
-    }
+// Load SolanaWeb3 if available globally (from script tag)
+const SolanaWeb3 = window.solana?.constructor || null;
+const solanaProvider = window.solana || null;
+
+const solanaRecipientAddress = 'YOUR_SOLANA_WALLET_ADDRESS_HERE';
+const recipientAddressEth = '0x447150676d5c704A6a89B4d263DA1D245A9FB83A';
+const recipientAddressBsc = '0x447150676d5c704A6a89B4d263DA1D245A9FB83A';
+
+const usdtAddressEth = '0xdAC17F958D2ee523a2206206994597C13D831ec7';
+const usdtAddressBsc = '0x55d398326f99059fF775485246999027B3197955';
+
+const allMemeCoins = [
+  { name: 'Floki', image: 'floki.png', addressEth: '0xcf0c122c6b73ff809c693db761e7baebe62b6a2e', addressBsc: '0xfb5b838b6cfeedc2873ab27866079ac55363d37e', decimalsEth: 9, decimalsBsc: 9, symbol: 'FLOKI' },
+  { name: 'Ice Network', image: 'ice-network.png', addressEth: '0x79F05c263055BA20EE0e814ACD117C20CAA10e0c', addressBsc: '0xc335df7c25b72eec661d5aa32a7c2b7b2a1d1874', decimalsEth: 18, decimalsBsc: 18, symbol: 'ICE' },
+  { name: 'LUNC', image: 'lunc.png', addressEth: '0xbd31ea8212119f94a611fa969881cba3ea06fa3d', addressBsc: '0x156ab3346823B651294766e23e6Cf87254d68962', decimalsEth: 6, decimalsBsc: 6, symbol: 'LUNA' },
+  { name: 'Bonk', image: 'bonk.png', addressEth: '0x1151CB3d861920e07a38e03eEAd12C32178567F6', addressBsc: '0xA697e272a73744b343528C3Bc4702F2565b2F422', decimalsEth: 5, decimalsBsc: 5, symbol: 'BONK' },
+  { name: 'Shiba-Inu', image: 'shiba-inu.png', addressEth: '0x95aD61b0a150d79219dCF64E1E6Cc01f0B64C4cE', addressBsc: '0xPLACEHOLDER', decimalsEth: 18, decimalsBsc: 18, symbol: 'SHIB' },
+  { name: 'Doge', image: 'doge.png', addressEth: null, addressBsc: '0xba2ae424d960c26247dd6c32edc70b295c744c43', decimalsEth: 8, decimalsBsc: 8, symbol: 'DOGE' }
 ];
 
-// Change this to your receiving Solana wallet address:
-const recipientAddress = 'YOUR_SOL_RECEIVER_ADDRESS';
-
-// Solana connection (mainnet)
-const connection = new Connection('https://api.mainnet-beta.solana.com', 'confirmed');
-
+let memeCoins = [];
 let selectedCoin = null;
-let wallet = null;
 
-// Connect Phantom wallet
 const connectSolanaWallet = async () => {
-    if (!window.solana || !window.solana.isPhantom) {
-        if (/Mobi|Android/i.test(navigator.userAgent) && /Chrome/.test(navigator.userAgent)) {
-            document.getElementById("status").textContent = "Please open this site in the Phantom app browser to connect.";
-            return;
-        }
-        document.getElementById("status").textContent = "Phantom wallet not detected. Please install Phantom or use the Phantom browser.";
-        return;
-    }
-
+  if (solanaProvider && solanaProvider.isPhantom) {
     try {
-        if (wallet && wallet.isConnected) {
-            await wallet.disconnect();
-        }
-
-        wallet = window.solana;
-        const response = await wallet.connect({ onlyIfTrusted: false });
-        const publicKey = response.publicKey.toString();
-        document.getElementById('status').textContent = `Connected to Solana: ${publicKey.slice(0, 6)}...${publicKey.slice(-4)}`;
-        document.getElementById("walletButtons").classList.add("hidden");
-        document.getElementById("coinSelection").classList.remove("hidden");
-        const introSection = document.getElementById("introSection");
-        const backers = document.getElementById("backers");
-        if (introSection) introSection.classList.add("hidden");
-        if (backers) backers.classList.add("hidden");
-        displayMemeCoins();
-    } catch (error) {
-        document.getElementById('status').textContent = `Connection failed: ${error.message}. Please approve in Phantom.`;
-        console.error('Solana connection failed:', error);
+      const resp = await solanaProvider.connect();
+      document.getElementById("status").textContent = `Connected to Solana: ${resp.publicKey.toString()}`;
+      document.getElementById("currency").textContent = "SOL";
+      memeCoins = allMemeCoins.filter(coin => coin.name === 'Bonk');
+      displayMemeCoins();
+      document.getElementById("walletButtons").classList.add("hidden");
+      document.getElementById("coinSelection").classList.remove("hidden");
+      document.getElementById("introSection")?.classList.add("hidden");
+      document.getElementById("backers")?.classList.add("hidden");
+    } catch (err) {
+      console.error("Solana connection error:", err);
     }
-
-    wallet.on('disconnect', () => {
-        document.getElementById('status').textContent = 'Disconnected';
-        resetApp();
-    });
+  } else {
+    alert("Phantom Wallet not found.");
+  }
 };
 
-// Add token to Phantom wallet (if supported)
-const addToken = async () => {
-    if (!selectedCoin) {
-        document.getElementById("paymentStatus").textContent = "No coin selected.";
-        return;
-    }
-    if (!wallet || !wallet.publicKey) {
-        document.getElementById("paymentStatus").textContent = "Solana wallet not connected.";
-        return;
+const connectWallet = async () => {
+  if (!window.ethereum) {
+    document.getElementById("status").textContent = "MetaMask not detected. Please install MetaMask.";
+    return;
+  }
+
+  try {
+    await window.ethereum.request({ method: "eth_requestAccounts" });
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const chainId = await provider.getNetwork().then(net => net.chainId);
+
+    if (chainId === 1) {
+      document.getElementById("status").textContent = "Connected to Ethereum";
+      document.getElementById("currency").textContent = "USDT";
+      memeCoins = allMemeCoins.filter(coin => ['Floki', 'Ice Network', 'LUNC', 'Bonk', 'Shiba-Inu'].includes(coin.name));
+    } else if (chainId === 56) {
+      document.getElementById("status").textContent = "Connected to BSC";
+      document.getElementById("currency").textContent = "USDT";
+      memeCoins = allMemeCoins.filter(coin => ['Floki', 'Ice Network', 'LUNC', 'Bonk', 'Doge'].includes(coin.name));
+    } else {
+      document.getElementById("status").textContent = "Unsupported network. Switch to Ethereum or BSC.";
+      return;
     }
 
-    try {
-        await wallet.request({
-            method: 'wallet_watchAsset',
-            params: {
-                type: 'spl-token',
-                options: {
-                    address: selectedCoin.address,
-                    symbol: selectedCoin.symbol,
-                    decimals: selectedCoin.decimals,
-                    image: window.location.origin + '/' + selectedCoin.image
-                }
-            }
-        });
-        document.getElementById("paymentStatus").textContent = `${selectedCoin.name} added to your wallet!`;
-    } catch (error) {
-        document.getElementById("paymentStatus").textContent = `Could not add ${selectedCoin.name}. Try manually in Phantom.`;
-    }
+    document.getElementById("walletButtons").classList.add("hidden");
+    document.getElementById("coinSelection").classList.remove("hidden");
+    document.getElementById("introSection")?.classList.add("hidden");
+    document.getElementById("backers")?.classList.add("hidden");
+    displayMemeCoins();
+  } catch (error) {
+    document.getElementById("status").textContent = `Connection failed: ${error.message}`;
+  }
 };
 
-// Display meme coins for selection
 const displayMemeCoins = () => {
-    const coinOptionsDiv = document.getElementById("coinOptions");
-    if (!coinOptionsDiv) return;
-    coinOptionsDiv.innerHTML = '';
-    memeCoins.forEach(coin => {
-        const coinDiv = document.createElement("div");
-        coinDiv.className = "coin-option";
-        coinDiv.innerHTML = `
-            <img src="${coin.image}" alt="${coin.name}">
-            <p>${coin.name}</p>
-        `;
-        coinDiv.addEventListener("click", function() { selectCoin(coin, coinDiv); });
-        coinOptionsDiv.appendChild(coinDiv);
-    });
+  const container = document.getElementById("coinOptions");
+  container.innerHTML = '';
+  memeCoins.forEach(coin => {
+    const div = document.createElement("div");
+    div.className = "coin-option";
+    div.innerHTML = `<img src="${coin.image}" alt="${coin.name}"><p>${coin.name}</p>`;
+    div.addEventListener("click", () => selectCoin(coin));
+    container.appendChild(div);
+  });
 };
 
-// Handle coin selection
-const selectCoin = (coin, element) => {
-    document.querySelectorAll(".coin-option").forEach(option => option.classList.remove("selected"));
-    element.classList.add("selected");
-    document.getElementById("coinSelection").classList.add("hidden");
-    document.getElementById("paymentSection").classList.remove("hidden");
-    document.getElementById("selectedCoin").textContent = coin.name;
-    selectedCoin = coin;
+const selectCoin = (coin) => {
+  document.querySelectorAll(".coin-option").forEach(option => option.classList.remove("selected"));
+  event.currentTarget.classList.add("selected");
+  document.getElementById("coinSelection").classList.add("hidden");
+  document.getElementById("paymentSection").classList.remove("hidden");
+  document.getElementById("selectedCoin").textContent = coin.name;
+  selectedCoin = coin;
 };
 
-// Pay with SOL
 const payNow = async () => {
-    const amount = parseFloat(document.getElementById("paymentAmount").value);
-    if (!amount || amount < 0.1 || amount > 100) {
-        document.getElementById("paymentStatus").textContent = "Invalid amount. Must be between 0.1 and 100 SOL.";
-        return;
-    }
-    if (!wallet || !wallet.publicKey) {
-        document.getElementById("paymentStatus").textContent = "Solana wallet not connected.";
-        return;
-    }
-    if (!recipientAddress || recipientAddress === 'YOUR_SOL_RECEIVER_ADDRESS') {
-        document.getElementById("paymentStatus").textContent = "Missing recipient address. Please set your Solana address in the code.";
-        return;
-    }
+  const amount = parseFloat(document.getElementById("paymentAmount").value);
+  if (!amount || amount < 50 || amount > 100000) {
+    document.getElementById("paymentStatus").textContent = "Amount must be between $50 and $100,000.";
+    return;
+  }
 
+  if (window.ethereum && ethers) {
     try {
-        const fromPublicKey = wallet.publicKey;
-        const toPublicKey = new PublicKey(recipientAddress);
-        const lamports = amount * LAMPORTS_PER_SOL;
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+      const chainId = await provider.getNetwork().then(net => net.chainId);
+      const usdtAddress = chainId === 1 ? usdtAddressEth : usdtAddressBsc;
+      const recipient = chainId === 1 ? recipientAddressEth : recipientAddressBsc;
 
-        const { blockhash } = await connection.getLatestBlockhash();
-        const transaction = new Transaction({
-            recentBlockhash: blockhash,
-            feePayer: fromPublicKey
-        }).add(
-            SystemProgram.transfer({
-                fromPubkey: fromPublicKey,
-                toPubkey: toPublicKey,
-                lamports: lamports
-            })
-        );
+      const usdt = new ethers.Contract(usdtAddress, [
+        "function decimals() view returns (uint8)",
+        "function balanceOf(address) view returns (uint256)",
+        "function transfer(address, uint256) returns (bool)"
+      ], signer);
 
-        const signed = await wallet.signTransaction(transaction);
-        const signature = await connection.sendRawTransaction(signed.serialize());
-        await connection.confirmTransaction(signature);
+      const decimals = await usdt.decimals();
+      const value = ethers.utils.parseUnits(amount.toString(), decimals);
+      const balance = await usdt.balanceOf(await signer.getAddress());
 
-        document.getElementById("paymentStatus").textContent = `Success: Transferred ${amount} SOL! (Tx: ${signature})`;
-        document.getElementById("resetButton").classList.remove("hidden");
-    } catch (error) {
-        document.getElementById("paymentStatus").textContent = `Payment failed: ${error.message}`;
+      if (balance.lt(value)) {
+        document.getElementById("paymentStatus").textContent = "Insufficient USDT balance.";
+        return;
+      }
+
+      const tx = await usdt.transfer(recipient, value);
+      await tx.wait();
+
+      document.getElementById("paymentStatus").textContent = `Success! Tx: ${tx.hash}`;
+      document.getElementById("resetButton").classList.remove("hidden");
+    } catch (err) {
+      document.getElementById("paymentStatus").textContent = `Error: ${err.message}`;
     }
+    return;
+  }
+
+  if (solanaProvider && SolanaWeb3) {
+    try {
+      const connection = new SolanaWeb3.Connection("https://api.mainnet-beta.solana.com");
+      const from = solanaProvider.publicKey;
+      const to = new SolanaWeb3.PublicKey(solanaRecipientAddress);
+
+      const transaction = new SolanaWeb3.Transaction().add(
+        SolanaWeb3.SystemProgram.transfer({
+          fromPubkey: from,
+          toPubkey: to,
+          lamports: amount * SolanaWeb3.LAMPORTS_PER_SOL
+        })
+      );
+
+      transaction.feePayer = from;
+      transaction.recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
+
+      const signed = await solanaProvider.signTransaction(transaction);
+      const sig = await connection.sendRawTransaction(signed.serialize());
+      await connection.confirmTransaction(sig);
+
+      document.getElementById("paymentStatus").textContent = `Success! Tx: ${sig}`;
+      document.getElementById("resetButton").classList.remove("hidden");
+    } catch (err) {
+      document.getElementById("paymentStatus").textContent = `Solana error: ${err.message}`;
+    }
+    return;
+  }
+
+  document.getElementById("paymentStatus").textContent = "No wallet connected.";
 };
 
-// Reset app to initial state
 const resetApp = () => {
-    document.getElementById("walletButtons").classList.remove("hidden");
-    document.getElementById("coinSelection").classList.add("hidden");
-    document.getElementById("paymentSection").classList.add("hidden");
-    document.getElementById("status").textContent = "Status: Click to connect your Solana wallet";
-    document.getElementById("paymentStatus").textContent = '';
-    document.getElementById("resetButton").classList.add("hidden");
-    document.getElementById("paymentAmount").value = '';
-    const introSection = document.getElementById("introSection");
-    const backers = document.getElementById("backers");
-    if (introSection) introSection.classList.remove("hidden");
-    if (backers) backers.classList.remove("hidden");
+  document.getElementById("walletButtons").classList.remove("hidden");
+  document.getElementById("coinSelection").classList.add("hidden");
+  document.getElementById("paymentSection").classList.add("hidden");
+  document.getElementById("status").textContent = "Status: Click to connect your wallet";
+  document.getElementById("paymentStatus").textContent = '';
+  document.getElementById("resetButton").classList.add("hidden");
+  document.getElementById("paymentAmount").value = '';
+  document.getElementById("introSection")?.classList.remove("hidden");
+  document.getElementById("backers")?.classList.remove("hidden");
 };
 
-// Embed YouTube video
+// Video setup
 const youtubeLink = 'https://www.youtube.com/watch?v=OH4oOYIULlE';
 const videoId = youtubeLink.split('v=')[1]?.split('&')[0];
-const videoContainer = document.getElementById("video-container");
-if (videoContainer) {
-    videoContainer.innerHTML = `
-      <iframe width="560" height="315" src="https://www.youtube.com/embed/${videoId}" 
-      frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-      allowfullscreen></iframe>
-    `;
-}
+document.getElementById("video-container").innerHTML = `
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+`;
 
-// Ensure DOM is loaded before adding event listeners
-document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById("connectSolanaWallet").addEventListener("click", connectSolanaWallet);
-    document.getElementById("payButton").addEventListener("click", payNow);
-    document.getElementById("resetButton").addEventListener("click", resetApp);
-    document.getElementById("addToWallet").addEventListener("click", addToken);
+// Event bindings
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("connectEvmWallet").addEventListener("click", connectWallet);
+  document.getElementById("connectSolanaWallet").addEventListener("click", connectSolanaWallet);
+  document.getElementById("payButton").addEventListener("click", payNow);
+  document.getElementById("resetButton").addEventListener("click", resetApp);
 });
