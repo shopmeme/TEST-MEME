@@ -128,10 +128,11 @@
       }
     }
   </style>
-  <!-- Libraries: ethers first, then buffer, then assign Buffer, then Solana, then your app -->
+  <!-- LIBRARIES: ethers, buffer, assign Buffer, solanaWeb3, then your app -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/buffer@6.0.3/index.min.js"></script>
   <script>
+    // Ensure Buffer global is set FROM the polyfill
     window.Buffer = buffer.Buffer;
   </script>
   <script src="https://unpkg.com/@solana/web3.js@1.95.2/lib/index.iife.min.js"></script>
