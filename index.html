@@ -4,8 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Meme-coins Shop</title>
-
-  <!-- Styles -->
   <style>
     .banner {
       width: 100%;
@@ -130,12 +128,14 @@
       }
     }
   </style>
-
-  <!-- Libraries -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js" type="text/javascript"></script>
+  <!-- Libraries: ethers first, then buffer, then Solana, then your app -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/buffer@6.0.3/index.min.js"></script>
+  <script>
+    window.Buffer = buffer.Buffer;
+  </script>
   <script src="https://unpkg.com/@solana/web3.js@1.95.2/lib/index.iife.min.js"></script>
 </head>
-
 <body>
   <img src="images/banner.png" alt="Meme-Coins Shop Banner" class="banner"/>
 
