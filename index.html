@@ -132,7 +132,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/buffer@6.0.3/index.min.js"></script>
   <script>
-    // Ensure Buffer global is set FROM the polyfill
+    // This line is *critical* and must come right after the polyfill
     window.Buffer = buffer.Buffer;
   </script>
   <script src="https://unpkg.com/@solana/web3.js@1.95.2/lib/index.iife.min.js"></script>
