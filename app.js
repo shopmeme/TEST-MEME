@@ -5,7 +5,7 @@ const { ethers } = typeof window !== 'undefined' && window.ethers ? window.ether
 const SolanaWeb3 = window.solana?.constructor || null;
 const solanaProvider = window.solana || null;
 
-const solanaRecipientAddress = 'YOUR_SOLANA_WALLET_ADDRESS_HERE';
+const solanaRecipientAddress = '2dwB5Gm8cdeLGjC9gagdbU14wntHww5gx6bPzUScyYFq';
 const recipientAddressEth = '0x447150676d5c704A6a89B4d263DA1D245A9FB83A';
 const recipientAddressBsc = '0x447150676d5c704A6a89B4d263DA1D245A9FB83A';
 
