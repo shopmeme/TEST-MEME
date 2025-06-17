@@ -24,6 +24,25 @@ const allMemeCoins = [
 let memeCoins = [];
 let selectedCoin = null;
 
+const updateAmountLimits = () => {
+  let min, max, label;
+  const currency = document.getElementById("currency").textContent;
+  if (currency === "SOL") {
+    min = 0.5;
+    max = 625;
+    label = "Enter amount (Min: 0.5 SOL, Max: 625 SOL):";
+    document.getElementById("paymentAmount").step = "0.01";
+  } else {
+    min = 50;
+    max = 100000;
+    label = "Enter amount (Min: $50, Max: $100,000):";
+    document.getElementById("paymentAmount").step = "0.01";
+  }
+  document.getElementById("paymentAmount").min = min;
+  document.getElementById("paymentAmount").max = max;
+  document.getElementById("amountLimits").textContent = label;
+};
+
 const connectSolanaWallet = async () => {
   if (solanaProvider && solanaProvider.isPhantom) {
     try {
@@ -36,6 +55,7 @@ const connectSolanaWallet = async () => {
       document.getElementById("coinSelection").classList.remove("hidden");
       document.getElementById("introSection")?.classList.add("hidden");
       document.getElementById("backers")?.classList.add("hidden");
+      updateAmountLimits();
     } catch (err) {
       console.error("Solana connection error:", err);
     }
@@ -73,6 +93,7 @@ const connectWallet = async () => {
     document.getElementById("introSection")?.classList.add("hidden");
     document.getElementById("backers")?.classList.add("hidden");
     displayMemeCoins();
+    updateAmountLimits();
   } catch (error) {
     document.getElementById("status").textContent = `Connection failed: ${error.message}`;
   }
@@ -85,28 +106,40 @@ const displayMemeCoins = () => {
     const div = document.createElement("div");
     div.className = "coin-option";
     div.innerHTML = `<img src="${coin.image}" alt="${coin.name}"><p>${coin.name}</p>`;
-    div.addEventListener("click", () => selectCoin(coin));
+    div.addEventListener("click", (event) => selectCoin(coin, event));
     container.appendChild(div);
   });
 };
 
-const selectCoin = (coin) => {
+const selectCoin = (coin, event) => {
   document.querySelectorAll(".coin-option").forEach(option => option.classList.remove("selected"));
   event.currentTarget.classList.add("selected");
   document.getElementById("coinSelection").classList.add("hidden");
   document.getElementById("paymentSection").classList.remove("hidden");
   document.getElementById("selectedCoin").textContent = coin.name;
   selectedCoin = coin;
+  updateAmountLimits();
 };
 
 const payNow = async () => {
   const amount = parseFloat(document.getElementById("paymentAmount").value);
-  if (!amount || amount < 50 || amount > 100000) {
-    document.getElementById("paymentStatus").textContent = "Amount must be between $50 and $100,000.";
+  const currency = document.getElementById("currency").textContent;
+  let min, max, errorMsg;
+  if (currency === "SOL") {
+    min = 0.5;
+    max = 625;
+    errorMsg = "Amount must be between 0.5 and 625 SOL.";
+  } else {
+    min = 50;
+    max = 100000;
+    errorMsg = "Amount must be between $50 and $100,000.";
+  }
+  if (!amount || amount < min || amount > max) {
+    document.getElementById("paymentStatus").textContent = errorMsg;
     return;
   }
 
-  if (window.ethereum && ethers) {
+  if (window.ethereum && ethers && currency === "USDT") {
     try {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = provider.getSigner();
@@ -140,7 +173,7 @@ const payNow = async () => {
     return;
   }
 
-  if (solanaProvider && SolanaWeb3) {
+  if (solanaProvider && SolanaWeb3 && currency === "SOL") {
     try {
       const connection = new SolanaWeb3.Connection("https://api.mainnet-beta.solana.com");
       const from = solanaProvider.publicKey;
@@ -182,6 +215,7 @@ const resetApp = () => {
   document.getElementById("paymentAmount").value = '';
   document.getElementById("introSection")?.classList.remove("hidden");
   document.getElementById("backers")?.classList.remove("hidden");
+  updateAmountLimits();
 };
 
 // Video setup
@@ -197,4 +231,5 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("connectSolanaWallet").addEventListener("click", connectSolanaWallet);
   document.getElementById("payButton").addEventListener("click", payNow);
   document.getElementById("resetButton").addEventListener("click", resetApp);
+  updateAmountLimits();
 });
